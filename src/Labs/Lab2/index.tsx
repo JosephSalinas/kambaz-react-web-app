@@ -18,6 +18,8 @@ import BootstrapGridsResponsive from "./BootstrapGridsResponsive";
 import ScreenSizeLabel from "./ScreenSizeLabel";
 import BootstrapTables from "./BootstrapTables";
 import BootstrapTablesResponsive from "./BootstrapTablesResponsive";
+import BootstrapForms from "./BootstrapForms";
+import BootstrapNavigation from "./BootstrapNavigation";
 
 export default function Lab2() {
     return (
@@ -91,6 +93,8 @@ export default function Lab2() {
           <ScreenSizeLabel/>
           <BootstrapTables/>
           <BootstrapTablesResponsive/>
+          <BootstrapForms/>
+          <BootstrapNavigation/>
         </Container>
         );
 }
