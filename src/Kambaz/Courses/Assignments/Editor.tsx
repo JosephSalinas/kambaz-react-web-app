@@ -1,21 +1,26 @@
+import { useParams, Link } from "react-router-dom";
 import { FaCalendarAlt } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
+import * as db from "../../Database";
 
 export default function AssignmentEditor() {
+    const { cid, aid } = useParams();
+    const assignment = db.assignments.find(a => a._id === aid && a.course === cid);
+
+    // Added in the event there isn't an assignment
+    if (!assignment) {
+        return <div className="alert alert-danger">No Assignment found.</div>;
+    }
+
     return (
         <div id="wd-assignments-editor" className="container mt-4">
             <div className="mb-3">
                 <label htmlFor="wd-name" className="form-label fw-bold">Assignment Name</label>
-                <input id="wd-name" className="form-control" defaultValue="A1 - ENV + HTML" />
+                <input id="wd-name" className="form-control" defaultValue={assignment.title} />
             </div>
             <div className="mb-3">
                 <label htmlFor="wd-description" className="form-label fw-bold">Description</label>
-                <textarea id="wd-description" className="form-control" rows={5} defaultValue={`The assignment is available online. Submit a link to the landing page of
-                    your web application running on Netlify. The landing page should include
-                    the following: Your full name and section, links to each of the lab
-                    assignments, links to the Kambaz application, and links to all relevant
-                    source code repositories. The Kambaz application should include a link
-                    to navigate back to the landing page.`} />
+                <textarea id="wd-description" className="form-control" rows={5} defaultValue="Empty for now" />
             </div>
             <div className="mb-3">
                 <label htmlFor="wd-points" className="form-label fw-bold">Points</label>
@@ -46,26 +51,12 @@ export default function AssignmentEditor() {
             </div>
             <div className="mb-3">
                 <label className="form-label fw-bold">Online Entry Options</label>
-                <div className="form-check">
-                    <input id="wd-text-entry" type="checkbox" className="form-check-input" />
-                    <label className="form-check-label" htmlFor="wd-text-entry">Text Entry</label>
-                </div>
-                <div className="form-check">
-                    <input id="wd-website-url" type="checkbox" className="form-check-input" defaultChecked />
-                    <label className="form-check-label" htmlFor="wd-website-url">Website URL</label>
-                </div>
-                <div className="form-check">
-                    <input id="wd-media-recordings" type="checkbox" className="form-check-input" />
-                    <label className="form-check-label" htmlFor="wd-media-recordings">Media Recordings</label>
-                </div>
-                <div className="form-check">
-                    <input id="wd-student-annotation" type="checkbox" className="form-check-input" />
-                    <label className="form-check-label" htmlFor="wd-student-annotation">Student Annotation</label>
-                </div>
-                <div className="form-check">
-                    <input id="wd-file-upload" type="checkbox" className="form-check-input" />
-                    <label className="form-check-label" htmlFor="wd-file-upload">File Uploads</label>
-                </div>
+                {["Text Entry", "Website URL", "Media Recordings", "Student Annotation", "File Uploads"].map(option => (
+                    <div className="form-check" key={option}>
+                        <input type="checkbox" className="form-check-input" id={`wd-${option.toLowerCase().replace(" ", "-")}`} />
+                        <label className="form-check-label" htmlFor={`wd-${option.toLowerCase().replace(" ", "-")}`}>{option}</label>
+                    </div>
+                ))}
             </div>
             <div className="mb-3">
                 <label htmlFor="wd-assign-to" className="form-label fw-bold">Assign to</label>
@@ -107,8 +98,8 @@ export default function AssignmentEditor() {
             </div>
             <hr />
             <div className="d-flex justify-content-end">
-                <button type="button" className="btn btn-secondary me-2">Cancel</button>
-                <button type="button" className="btn btn-danger">Save</button>
+                <Link to={`/Kambaz/Courses/${cid}/Assignments`} className="btn btn-secondary me-2">Cancel</Link>
+                <Link to={`/Kambaz/Courses/${cid}/Assignments`} className="btn btn-danger">Save</Link>
             </div>
         </div>
     );
