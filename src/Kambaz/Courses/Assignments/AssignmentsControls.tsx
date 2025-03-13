@@ -1,13 +1,24 @@
-import { FaSearch } from "react-icons/fa";
+import { useSelector } from "react-redux";
+import { BsPlus } from "react-icons/bs";
+import { useNavigate, useParams } from "react-router-dom";
+
 export default function AssignmentsControls() {
+    const navigate = useNavigate();
+    const { cid } = useParams();
+    const { currentUser } = useSelector((state: any) => state.accountReducer);
+
     return (
-        <div className="d-flex align-items-center mb-3">
-            <div className="input-group me-2" style={{ width: "250px" }}>
-                <span className="input-group-text"><FaSearch /></span>
-                <input type="text" className="form-control" placeholder="Search..." id="wd-search-assignment" />
-            </div>
-            <button id="wd-add-assignment-group" className="btn btn-outline-secondary me-2">+ Group</button>
-            <button id="wd-add-assignment" className="btn btn-danger">+ Assignment</button>
+        <div id="wd-assignments-controls" className="d-flex justify-content-between align-items-center">
+            <h4>Assignments</h4>
+            {currentUser?.role === "FACULTY" && (
+                <button 
+                    className="btn btn-primary d-flex align-items-center"
+                    onClick={() => navigate(`/Kambaz/Courses/${cid}/Assignments/new`)}
+                >
+                    <BsPlus className="fs-4 me-2" />
+                    Add Assignment
+                </button>
+            )}
         </div>
     );
 }

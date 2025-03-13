@@ -1,35 +1,47 @@
-import { FaCalendarAlt } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { setCurrentUser } from "./reducer";
 export default function Profile() {
+    const [profile, setProfile] = useState<any>({});
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { currentUser } = useSelector((state: any) => state.accountReducer);
+    const fetchProfile = () => {
+        if (!currentUser) return navigate("/Kambaz/Account/Signin");
+        setProfile(currentUser);
+    };
+    const signout = () => {
+        dispatch(setCurrentUser(null));
+        navigate("/Kambaz/Account/Signin");
+    };
+    useEffect(() => { fetchProfile(); }, []);
     return (
-        <div id="wd-profile-screen">
+        <div className="wd-profile-screen">
             <h3>Profile</h3>
-            <input defaultValue="alice" placeholder="username" className="wd-username form-control" />
-            <input defaultValue="123" placeholder="password" type="password" className="wd-password form-control  mt-1" />
-            <input defaultValue="Alice" placeholder="First Name" className="form-control mt-1" id="wd-firstname" />
-            <input defaultValue="Wonderland" placeholder="Last Name" className="form-control mt-1" id="wd-lastname" />
-
-            <div className="input-group">
-                <input defaultValue="mm/dd/yyyy" type="date" className="form-control mt-1" id="wd-dob" />
-                <span className="input-group-text bg-white">
-                    <FaCalendarAlt className="mt-1" />
-                </span>
-            </div>
-
-            <input defaultValue="alice@wonderland.com" className="form-control mt-1" type="email" id="wd-email" />
-            <select defaultValue="FACULTY" id="wd-role" className="form-control mt-1">
-                <option value="USER">User</option>
-                <option value="ADMIN">Admin</option>
-                <option value="FACULTY">Faculty</option>
-                <option value="STUDENT">Student</option>
-            </select>
-            <button type="button" className="btn btn-danger w-100 mt-2">
-                <Link to="/Kambaz/Account/Signin" className="text-decoration-none text-white" >Sign out</Link>
-            </button>
-        </div>
-    );
+            {profile && (
+                <div>
+                    <input defaultValue={profile.username} id="wd-username" className="form-control mb-2"
+                        onChange={(e) => setProfile({ ...profile, username: e.target.value })} />
+                    <input defaultValue={profile.password} id="wd-password" className="form-control mb-2"
+                        onChange={(e) => setProfile({ ...profile, password: e.target.value })} />
+                    <input defaultValue={profile.firstName} id="wd-firstname" className="form-control mb-2"
+                        onChange={(e) => setProfile({ ...profile, firstName: e.target.value })} />
+                    <input defaultValue={profile.lastName} id="wd-lastname" className="form-control mb-2"
+                        onChange={(e) => setProfile({ ...profile, lastName: e.target.value })} />
+                    <input defaultValue={profile.dob} id="wd-dob" className="form-control mb-2"
+                        onChange={(e) => setProfile({ ...profile, dob: e.target.value })} type="date" />
+                    <input defaultValue={profile.email} id="wd-email" className="form-control mb-2"
+                        onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
+                    <select onChange={(e) => setProfile({ ...profile, role: e.target.value })}
+                        className="form-control mb-2" id="wd-role">
+                        <option value="USER">User</option> <option value="ADMIN">Admin</option>
+                        <option value="FACULTY">Faculty</option> <option value="STUDENT">Student</option>
+                    </select>
+                    <button onClick={signout} className="btn btn-danger w-100 mb-2" id="wd-signout-btn">
+                        Sign out
+                    </button>
+                </div>
+            )}
+        </div>);
 }
-
-<div className="mb-3">
-    <input id="wd-points" type="number" className="form-control mt-1" defaultValue={100} />
-</div>

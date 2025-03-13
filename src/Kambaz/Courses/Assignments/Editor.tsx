@@ -1,105 +1,114 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { FaCalendarAlt } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
-import * as db from "../../Database";
+import { useDispatch, useSelector } from "react-redux";
+import { useState, useEffect } from "react";
+import { updateAssignment } from "./reducer";
 
 export default function AssignmentEditor() {
     const { cid, aid } = useParams();
-    const assignment = db.assignments.find(a => a._id === aid && a.course === cid);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
-    // Added in the event there isn't an assignment
-    if (!assignment) {
-        return <div className="alert alert-danger">No Assignment found.</div>;
-    }
+    const assignments = useSelector((state: any) => state.assignmentsReducer.assignments);
+    const currentAssignment = assignments.find((a: any) => a._id === aid && a.course === cid);
+
+    const [title, setTitle] = useState(currentAssignment?.title || "");
+    const [description, setDescription] = useState(currentAssignment?.description || "");
+    const [points, setPoints] = useState(currentAssignment?.points || 100);
+    const [dueDate, setDueDate] = useState(currentAssignment?.dueDate || "");
+    const [availableFrom, setAvailableFrom] = useState(currentAssignment?.availableFrom || "");
+    const [availableUntil, setAvailableUntil] = useState(currentAssignment?.availableUntil || "");
+
+    useEffect(() => {
+        if (currentAssignment) {
+            setTitle(currentAssignment.title);
+            setDescription(currentAssignment.description);
+            setPoints(currentAssignment.points);
+            setDueDate(currentAssignment.dueDate);
+            setAvailableFrom(currentAssignment.availableFrom);
+            setAvailableUntil(currentAssignment.availableUntil);
+        }
+    }, [currentAssignment]);
 
     return (
         <div id="wd-assignments-editor" className="container mt-4">
             <div className="mb-3">
-                <label htmlFor="wd-name" className="form-label fw-bold">Assignment Name</label>
-                <input id="wd-name" className="form-control" defaultValue={assignment.title} />
+                <label className="form-label fw-bold">Assignment Name</label>
+                <input className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
             <div className="mb-3">
-                <label htmlFor="wd-description" className="form-label fw-bold">Description</label>
-                <textarea id="wd-description" className="form-control" rows={5} defaultValue="Empty for now" />
+                <label className="form-label fw-bold">Description</label>
+                <textarea className="form-control" rows={5} value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
             <div className="mb-3">
-                <label htmlFor="wd-points" className="form-label fw-bold">Points</label>
-                <input id="wd-points" type="number" className="form-control" defaultValue={100} />
+                <label className="form-label fw-bold">Points</label>
+                <input type="number" className="form-control" value={points} onChange={(e) => setPoints(Number(e.target.value))} />
             </div>
+
             <div className="mb-3">
-                <label htmlFor="wd-group" className="form-label fw-bold">Assignment Group</label>
-                <select id="wd-group" className="form-control">
-                    <option value="assignments" selected>ASSIGNMENTS</option>
-                    <option value="quizzes">Quizzes</option>
-                    <option value="projects">Projects</option>
-                </select>
-            </div>
-            <div className="mb-3">
-                <label htmlFor="wd-display-grade-as" className="form-label fw-bold">Display Grade as</label>
-                <select id="wd-display-grade-as" className="form-control">
-                    <option value="percentage" selected>Percentage</option>
-                    <option value="points">Points</option>
-                    <option value="complete/incomplete">Complete/Incomplete</option>
-                </select>
-            </div>
-            <div className="mb-3">
-                <label htmlFor="wd-submission-type" className="form-label fw-bold">Submission Type</label>
-                <select id="wd-submission-type" className="form-control">
-                    <option value="online" selected>Online</option>
-                    <option value="on-paper">On Paper</option>
-                </select>
-            </div>
-            <div className="mb-3">
-                <label className="form-label fw-bold">Online Entry Options</label>
-                {["Text Entry", "Website URL", "Media Recordings", "Student Annotation", "File Uploads"].map(option => (
-                    <div className="form-check" key={option}>
-                        <input type="checkbox" className="form-check-input" id={`wd-${option.toLowerCase().replace(" ", "-")}`} />
-                        <label className="form-check-label" htmlFor={`wd-${option.toLowerCase().replace(" ", "-")}`}>{option}</label>
-                    </div>
-                ))}
-            </div>
-            <div className="mb-3">
-                <label htmlFor="wd-assign-to" className="form-label fw-bold">Assign to</label>
+                <label className="form-label fw-bold">Due Date</label>
                 <div className="input-group">
-                    <input id="wd-assign-to" type="text" className="form-control" defaultValue="Everyone" />
-                    <span className="input-group-text bg-white border">
-                        <IoClose className="text-muted" />
-                    </span>
-                </div>
-            </div>
-            <div className="mb-3">
-                <label htmlFor="wd-due-date" className="form-label fw-bold">Due</label>
-                <div className="input-group">
-                    <input id="wd-due-date" type="date" className="form-control" defaultValue="2024-05-13" />
+                    <input type="date" className="form-control" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
                     <span className="input-group-text bg-white border">
                         <FaCalendarAlt className="text-muted" />
                     </span>
                 </div>
             </div>
+
             <div className="row mb-3">
                 <div className="col-md-6">
-                    <label htmlFor="wd-available-from" className="form-label fw-bold">Available from</label>
+                    <label className="form-label fw-bold">Available From</label>
                     <div className="input-group">
-                        <input id="wd-available-from" type="date" className="form-control" defaultValue="2024-05-06" />
+                        <input type="date" className="form-control" value={availableFrom} onChange={(e) => setAvailableFrom(e.target.value)} />
                         <span className="input-group-text bg-white border">
                             <FaCalendarAlt className="text-muted" />
                         </span>
                     </div>
                 </div>
+
                 <div className="col-md-6">
-                    <label htmlFor="wd-available-until" className="form-label fw-bold">Until</label>
+                    <label className="form-label fw-bold">Until</label>
                     <div className="input-group">
-                        <input id="wd-available-until" type="date" className="form-control" defaultValue="2024-05-28" />
+                        <input type="date" className="form-control" value={availableUntil} onChange={(e) => setAvailableUntil(e.target.value)} />
                         <span className="input-group-text bg-white border">
                             <FaCalendarAlt className="text-muted" />
                         </span>
                     </div>
                 </div>
             </div>
+
+            <div className="mb-3">
+                <label className="form-label fw-bold">Assign To</label>
+                <div className="input-group">
+                    <input type="text" className="form-control" defaultValue="Everyone" />
+                    <span className="input-group-text bg-white border">
+                        <IoClose className="text-muted" />
+                    </span>
+                </div>
+            </div>
+
             <hr />
             <div className="d-flex justify-content-end">
                 <Link to={`/Kambaz/Courses/${cid}/Assignments`} className="btn btn-secondary me-2">Cancel</Link>
-                <Link to={`/Kambaz/Courses/${cid}/Assignments`} className="btn btn-danger">Save</Link>
+                <button
+                    className="btn btn-danger"
+                    onClick={() => {
+                        dispatch(updateAssignment({
+                            _id: aid,
+                            course: cid,
+                            title,
+                            description,
+                            points,
+                            dueDate,
+                            availableFrom,
+                            availableUntil
+                        }));
+                        navigate(`/Kambaz/Courses/${cid}/Assignments`);
+                    }}
+                >
+                    Save
+                </button>
             </div>
         </div>
     );
