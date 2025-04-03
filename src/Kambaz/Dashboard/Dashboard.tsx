@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { useState } from "react";
-import { enroll, unenroll } from "./enrollmentsReducer";
+import * as enrollmentsClient from "./client";
+
+
+
 
 export default function Dashboard({
-  courses, course, setCourse, addNewCourse, deleteCourse, updateCourse
+  courses, course, setCourse, addNewCourse, deleteCourse, updateCourse, fetchCourses
 }: {
   courses: any[];
   course: any;
@@ -12,18 +15,15 @@ export default function Dashboard({
   addNewCourse: () => void;
   deleteCourse: (course: any) => void;
   updateCourse: () => void;
+  fetchCourses: () => void;
+
 }) {
   const { currentUser } = useSelector((state: any) => state.accountReducer);
-  const { enrollments } = useSelector((state: any) => state.enrollmentsReducer);
-  const dispatch = useDispatch();
 
   const [showAllCourses, setShowAllCourses] = useState(false);
-
-  const enrolledCourses = courses.filter((course) =>
-    enrollments.some((enrollment: any) => enrollment.user === currentUser._id && enrollment.course === course._id)
-  );
-
-  const displayedCourses = showAllCourses ? courses : enrolledCourses;
+  const displayedCourses = currentUser?.role === "STUDENT" && !showAllCourses
+    ? courses.filter((c) => c.enrolled)
+    : courses;
 
   return (
     <div id="wd-dashboard">
@@ -59,10 +59,7 @@ export default function Dashboard({
       <div id="wd-dashboard-courses" className="row">
         <div className="row row-cols-1 row-cols-md-5 g-4">
           {displayedCourses.map((course) => {
-            const isEnrolled = enrollments.some(
-              (enrollment: any) => enrollment.user === currentUser._id && enrollment.course === course._id
-            );
-
+            const isEnrolled = course.enrolled;
             return (
               <div className="wd-dashboard-course col" style={{ width: "300px" }} key={course._id}>
                 <div className="card rounded-3 overflow-hidden">
@@ -108,11 +105,14 @@ export default function Dashboard({
                       {currentUser?.role === "STUDENT" && (
                         <button
                           className={`btn ${isEnrolled ? "btn-danger" : "btn-success"} float-end`}
-                          onClick={(event) => {
+                          onClick={async (event) => {
                             event.preventDefault();
-                            isEnrolled
-                              ? dispatch(unenroll({ userId: currentUser._id, courseId: course._id }))
-                              : dispatch(enroll({ userId: currentUser._id, courseId: course._id }));
+                            if (isEnrolled) {
+                              await enrollmentsClient.unenroll(currentUser._id, course._id);
+                            } else {
+                              await enrollmentsClient.enroll(currentUser._id, course._id);
+                            }
+                            fetchCourses();
                           }}
                         >
                           {isEnrolled ? "Unenroll" : "Enroll"}

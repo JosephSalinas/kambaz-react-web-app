@@ -3,10 +3,14 @@ import { FaCalendarAlt } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useEffect } from "react";
-import { updateAssignment } from "./reducer";
+import { addAssignment, updateAssignment } from "./reducer";
+import * as assignmentsClient from "./client";
 
 export default function AssignmentEditor() {
     const { cid, aid } = useParams();
+    if (!cid) {
+        return <div className="alert alert-danger">Missing course ID</div>;
+    }
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -30,6 +34,42 @@ export default function AssignmentEditor() {
             setAvailableUntil(currentAssignment.availableUntil);
         }
     }, [currentAssignment]);
+
+    const saveAssignment = async () => {
+        let savedAssignment;
+
+        if (aid === "new") {
+            // Create new assignment
+            const newAssignment = {
+                title,
+                description,
+                points,
+                dueDate,
+                availableFrom,
+                availableUntil,
+                course: cid,
+            };
+            savedAssignment = await assignmentsClient.createAssignment(cid, newAssignment);
+            dispatch(addAssignment(savedAssignment));
+        } else {
+            // Update existing assignment
+            const updated = {
+                _id: aid,
+                course: cid,
+                title,
+                description,
+                points,
+                dueDate,
+                availableFrom,
+                availableUntil,
+            };
+            await assignmentsClient.updateAssignment(updated);
+            dispatch(updateAssignment(updated));
+        }
+
+        navigate(`/Kambaz/Courses/${cid}/Assignments`);
+    };
+
 
     return (
         <div id="wd-assignments-editor" className="container mt-4">
@@ -91,24 +131,7 @@ export default function AssignmentEditor() {
             <hr />
             <div className="d-flex justify-content-end">
                 <Link to={`/Kambaz/Courses/${cid}/Assignments`} className="btn btn-secondary me-2">Cancel</Link>
-                <button
-                    className="btn btn-danger"
-                    onClick={() => {
-                        dispatch(updateAssignment({
-                            _id: aid,
-                            course: cid,
-                            title,
-                            description,
-                            points,
-                            dueDate,
-                            availableFrom,
-                            availableUntil
-                        }));
-                        navigate(`/Kambaz/Courses/${cid}/Assignments`);
-                    }}
-                >
-                    Save
-                </button>
+                <button className="btn btn-danger" onClick={saveAssignment}>Save</button>
             </div>
         </div>
     );
