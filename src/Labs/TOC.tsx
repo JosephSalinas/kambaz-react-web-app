@@ -15,8 +15,13 @@ export default function TOC() {
             <li className="nav-item"><a id="wd-a4" href="#/Labs/Lab5"
                 className={`nav-link ${pathname.includes("Lab5") ? "active" : ""}`}>Lab 5</a></li>
             <li className="nav-item"><a id="wd-k" href="#/Kambaz" className="nav-link">Kambaz</a></li>
-            <li className="nav-item"><a id="wd-github" href="https://github.com/JosephSalinas/kambaz-react-web-app/" target="_blank"
-                className="nav-link">My GitHub</a></li>
+            <li className="nav-item"><a id="wd-github1" href="https://github.com/JosephSalinas/kambaz-react-web-app/" target="_blank"
+                className="nav-link">React App</a></li>
+            <li className="nav-item"><a id="wd-github2" href="https://github.com/JosephSalinas/kambaz-node-server-app/" target="_blank"
+                className="nav-link">Node Server Github</a></li>
+            <li className="nav-item"><a id="wd-github2" href="https://kambaz-node-server-app-rtky.onrender.com/" target="_blank"
+                className="nav-link">Node Server Remote</a></li>
+
         </ul>
     );
 }
