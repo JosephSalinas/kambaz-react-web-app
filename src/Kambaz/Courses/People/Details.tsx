@@ -8,13 +8,19 @@ import * as client from "../../Account/client";
 import { FormControl } from "react-bootstrap";
 export default function PeopleDetails() {
     const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [role, setRole] = useState("");
     const [editing, setEditing] = useState(false);
+    const [emailEditing, setEmailEditing] = useState(false);
+    const [roleEditing, setRoleEditing] = useState(false);
     const saveUser = async () => {
         const [firstName, lastName] = name.split(" ");
-        const updatedUser = { ...user, firstName, lastName };
+        const updatedUser = { ...user, firstName, lastName, email: email, role: role };
         await client.updateUser(updatedUser);
         setUser(updatedUser);
         setEditing(false);
+        setEmailEditing(false);
+        setRoleEditing(false);
         navigate(-1);
     };
 
@@ -58,6 +64,52 @@ export default function PeopleDetails() {
                         onKeyDown={(e) => {
                             if (e.key === "Enter") { saveUser(); }
                         }} />)}
+            </div>
+
+            <div className="text-danger fs-4 wd-email"> {!emailEditing && (
+                <FaPencil onClick={() => setEmailEditing(true)}
+                    className="float-end fs-2 mt-2 wd-edit" />)}
+                {emailEditing && (
+                    <FaCheck onClick={() => saveUser()}
+                        className="float-end fs-2 mt-2 me-2 wd-save" />)}
+                {!emailEditing && (
+                    <div className="wd-email"
+                        onClick={() => setEmailEditing(true)}>{user.email}</div>)}
+                {user && emailEditing && (
+                    <FormControl className="w-50 wd-edit-name"
+                        defaultValue={`${user.email}`}
+                        onChange={(e) => setEmail(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                saveUser();
+                            }
+                        }} />)}
+            </div>
+
+            <div className="text-danger fs-4 wd-role"> {!roleEditing && (
+                <FaPencil onClick={() => setRoleEditing(true)}
+                    className="float-end fs-2 mt-2 wd-edit" />)}
+                {roleEditing && (
+                    <FaCheck onClick={() => saveUser()}
+                        className="float-end fs-2 mt-2 me-2 wd-save" />)}
+                {!roleEditing && (
+                    <div className="wd-role"
+                        onClick={() => setRoleEditing(true)}>{user.role}</div>)}
+                {user && roleEditing && (
+                    <select className="form-select w-50 wd-edit-role"
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                saveUser();
+                            }
+                        }}
+                    >
+                        <option value="STUDENT">Student</option>
+                        <option value="TA">Assistant</option>
+                        <option value="FACULTY">Faculty</option>
+                        <option value="ADMIN">Admnistrator</option>
+                    </select>)}
             </div>
             <b>Roles:</b> <span className="wd-roles"> {user.role} </span> <br />
             <b>Login ID:</b> <span className="wd-login-id"> {user.loginId} </span> <br />

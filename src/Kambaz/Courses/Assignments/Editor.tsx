@@ -39,7 +39,6 @@ export default function AssignmentEditor() {
         let savedAssignment;
 
         if (aid === "new") {
-            // Create new assignment
             const newAssignment = {
                 title,
                 description,
@@ -52,7 +51,6 @@ export default function AssignmentEditor() {
             savedAssignment = await assignmentsClient.createAssignment(cid, newAssignment);
             dispatch(addAssignment(savedAssignment));
         } else {
-            // Update existing assignment
             const updated = {
                 _id: aid,
                 course: cid,

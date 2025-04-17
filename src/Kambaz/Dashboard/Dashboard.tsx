@@ -1,13 +1,9 @@
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useState } from "react";
-import * as enrollmentsClient from "./client";
-
-
 
 
 export default function Dashboard({
-  courses, course, setCourse, addNewCourse, deleteCourse, updateCourse, fetchCourses
+  courses, course, setCourse, addNewCourse, deleteCourse, updateCourse, enrolling, setEnrolling, updateEnrollment
 }: {
   courses: any[];
   course: any;
@@ -16,18 +12,22 @@ export default function Dashboard({
   deleteCourse: (course: any) => void;
   updateCourse: () => void;
   fetchCourses: () => void;
-
+  enrolling: boolean;
+  setEnrolling: (enrolling: boolean) => void;
+  updateEnrollment: (courseId: string, enrolled: boolean) => void
 }) {
   const { currentUser } = useSelector((state: any) => state.accountReducer);
 
-  const [showAllCourses, setShowAllCourses] = useState(false);
-  const displayedCourses = currentUser?.role === "STUDENT" && !showAllCourses
-    ? courses.filter((c) => c.enrolled)
-    : courses;
-
   return (
     <div id="wd-dashboard">
-      <h1 id="wd-dashboard-title">Dashboard</h1> <hr />
+      <h1 id="wd-dashboard-title">
+        Dashboard
+        {currentUser?.role === "STUDENT" && (
+        <button onClick={() => setEnrolling(!enrolling)} className="float-end btn btn-primary" >
+          {enrolling ? "My Courses" : "All Courses"}
+        </button>
+        )}
+      </h1> <hr />
 
       {currentUser?.role === "FACULTY" && (
         <>
@@ -44,36 +44,38 @@ export default function Dashboard({
         </>
       )}
 
-
-      {currentUser?.role === "STUDENT" && (
-        <button
-          className="btn btn-primary float-end mb-3"
-          onClick={() => setShowAllCourses(!showAllCourses)}
-        >
-          {showAllCourses ? "All" : "My enrollment"}
-        </button>
-      )}
-
-      <h2 id="wd-dashboard-published">Published Courses ({displayedCourses.length})</h2> <hr />
+      <h2 id="wd-dashboard-published">Published Courses ({courses.length})</h2> <hr />
 
       <div id="wd-dashboard-courses" className="row">
         <div className="row row-cols-1 row-cols-md-5 g-4">
-          {displayedCourses.map((course) => {
+          {courses.map((course) => {
             const isEnrolled = course.enrolled;
             return (
               <div className="wd-dashboard-course col" style={{ width: "300px" }} key={course._id}>
                 <div className="card rounded-3 overflow-hidden">
-                  <Link to={isEnrolled ? `/Kambaz/Courses/${course._id}/Home` : "#"}
+                  <Link to={`/Kambaz/Courses/${course._id}/Home`}
                     className={`wd-dashboard-course-link text-decoration-none ${isEnrolled ? "text-dark" : "text-muted"}`}
-                    onClick={(e) => !isEnrolled && e.preventDefault()}
+                    
                   >
                     <img src={course.imagePath || "images/writing.jpg"} width="100%" height={160} />
                     <div className="card-body">
-                      <h5 className="wd-dashboard-course-title card-title">{course.name}</h5>
+                      <h5 className="wd-dashboard-course-title card-title">
+                        
+                        {enrolling && (
+                          <button onClick={(event) => {
+                            event.preventDefault();
+                            updateEnrollment(course._id, !course.enrolled);
+                          }}
+                            className={`btn ${course.enrolled ? "btn-danger" : "btn-success"} float-end`} >
+                            {course.enrolled ? "Unenroll" : "Enroll"}
+                          </button>
+                        )}
+                        {course.name}
+                      </h5>
                       <p className="wd-dashboard-course-title card-text overflow-y-hidden" style={{ maxHeight: 100 }}>
                         {course.description}
                       </p>
-                      {isEnrolled ? (
+                      {course.enrolled ? (
                         <button className="btn btn-primary">Go</button>
                       ) : (
                         <span className="text-muted">Not Enrolled</span>
@@ -100,23 +102,6 @@ export default function Dashboard({
                             Edit
                           </button>
                         </>
-                      )}
-
-                      {currentUser?.role === "STUDENT" && (
-                        <button
-                          className={`btn ${isEnrolled ? "btn-danger" : "btn-success"} float-end`}
-                          onClick={async (event) => {
-                            event.preventDefault();
-                            if (isEnrolled) {
-                              await enrollmentsClient.unenroll(currentUser._id, course._id);
-                            } else {
-                              await enrollmentsClient.enroll(currentUser._id, course._id);
-                            }
-                            fetchCourses();
-                          }}
-                        >
-                          {isEnrolled ? "Unenroll" : "Enroll"}
-                        </button>
                       )}
                     </div>
                   </Link>
