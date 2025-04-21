@@ -18,6 +18,8 @@ export default function Assignments() {
     const assignments = useSelector((state: any) => state.assignmentsReducer.assignments)
         .filter((assignment: any) => assignment.course === cid);
 
+    console.log("The courseId is", cid);
+
     const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
 
     useEffect(() => {
