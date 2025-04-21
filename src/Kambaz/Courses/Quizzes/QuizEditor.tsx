@@ -357,6 +357,22 @@ function QuizEditor() {
                     </div>
 
                     <div className="row mb-3">
+                        <div className="col-md-6">
+                            <label className="form-label">Access Code</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={quiz.accessCode || ''}
+                                onChange={(e) => setQuiz({ ...quiz, accessCode: e.target.value })}
+                                placeholder="Leave blank for no access code"
+                            />
+                            <small className="text-muted">
+                                Students will need to enter this code to access the quiz
+                            </small>
+                        </div>
+                    </div>
+
+                    <div className="row mb-3">
                         <div className="col-12">
                             <div className="form-check">
                                 <input

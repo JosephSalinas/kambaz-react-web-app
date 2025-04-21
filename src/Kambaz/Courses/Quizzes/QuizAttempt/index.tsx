@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as client from '../client';
 import QuestionAttempt from './QuestionAttempt';
+import AccessCodeModal from './AccessCodeModal';
 
 interface QuizAttemptProps {
     isPreview?: boolean;
@@ -17,6 +18,8 @@ const QuizAttempt: React.FC<QuizAttemptProps> = ({ isPreview = false }) => {
     const [submitted, setSubmitted] = useState(false);
     const [score, setScore] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+    const [showAccessCodeModal, setShowAccessCodeModal] = useState(false);
+    const [accessVerified, setAccessVerified] = useState(false);
 
     useEffect(() => {
         const loadQuizAndQuestions = async () => {
@@ -24,16 +27,14 @@ const QuizAttempt: React.FC<QuizAttemptProps> = ({ isPreview = false }) => {
                 const quizData = await client.findQuizById(quizId!);
                 setQuiz(quizData);
                 
-                // Fetch questions
-                const questionsData = await client.findQuestionsForQuiz(quizId!);
-                setQuestions(questionsData);
+                // if quiz requires access code and not in preview mode, show modal
+                if (quizData.accessCode && !isPreview) {
+                    setShowAccessCodeModal(true);
+                } else {
+                    setAccessVerified(true);
+                    await loadQuestions();
+                }
                 
-                // Initialize answers object
-                const initialAnswers: Record<string, any> = {};
-                questionsData.forEach((q: any) => {
-                    initialAnswers[q._id] = null;
-                });
-                setAnswers(initialAnswers);
                 setLoading(false);
             } catch (error) {
                 console.error('Error loading quiz:', error);
@@ -43,7 +44,45 @@ const QuizAttempt: React.FC<QuizAttemptProps> = ({ isPreview = false }) => {
         loadQuizAndQuestions();
     }, [quizId]);
 
-    if (loading || !quiz || !questions.length) return <div>Loading...</div>;
+    const loadQuestions = async () => {
+        try {
+            const questionsData = await client.findQuestionsForQuiz(quizId!);
+            setQuestions(questionsData);
+            
+            // initialize answers object
+            const initialAnswers: Record<string, any> = {};
+            questionsData.forEach((q: any) => {
+                initialAnswers[q._id] = null;
+            });
+            setAnswers(initialAnswers);
+        } catch (error) {
+            console.error('Error loading questions:', error);
+        }
+    };
+
+    const handleAccessCodeSubmit = async (code: string) => {
+        if (code === quiz.accessCode) {
+            setShowAccessCodeModal(false);
+            setAccessVerified(true);
+            await loadQuestions();
+        } else {
+            // might add a toast here later
+            console.log("Access code is incorrect");
+            navigate(`/Kambaz/Courses/${cid}/Quizzes`);
+        }
+    };
+
+    const handleAccessCodeCancel = () => {
+        navigate(`/Kambaz/Courses/${cid}/Quizzes`);
+    };
+
+    if (loading) return <div>loadin..</div>;
+    if (!quiz) return <div>Quiz not foundd</div>;
+    if (showAccessCodeModal) {
+        return <AccessCodeModal onSubmit={handleAccessCodeSubmit} onCancel={handleAccessCodeCancel} />;
+    }
+    if (!accessVerified && !isPreview) return null;
+    if (!questions.length) return <div>Loading questions...</div>;
 
     const handleAnswerChange = (questionId: string, answer: any) => {
         setAnswers(prev => ({
@@ -153,7 +192,6 @@ const QuizAttempt: React.FC<QuizAttemptProps> = ({ isPreview = false }) => {
                                         <QuestionAttempt
                                             question={question}
                                             answer={answers[question._id]}
-                                            // we should disable this for faculty since preview.
                                             onChange={() => {}}
                                             showCorrect={true}
                                             isDisabled={true}
