@@ -499,13 +499,58 @@ function QuizEditor() {
                                 <div key={question._id || index} className="card mb-3">
                                     <div className="card-header d-flex justify-content-between align-items-center">
                                         <h5 className="mb-0">Question {index + 1}</h5>
-                                        <button
-                                            type="button"
-                                            className={`btn ${editingQuestions.has(index) ? 'btn-success' : 'btn-primary'}`}
-                                            onClick={() => toggleQuestionEdit(index)}
-                                        >
-                                            {editingQuestions.has(index) ? 'Save' : 'Edit'}
-                                        </button>
+                                        <div className="btn-group">
+                                            {editingQuestions.has(index) ? (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-success"
+                                                        onClick={() => toggleQuestionEdit(index)}
+                                                    >
+                                                        Save
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-secondary"
+                                                        onClick={() => {
+                                                            // Revert changes by re-fetching the original question if it exists
+                                                            if (question._id) {
+                                                                client.findQuestionById(question._id)
+                                                                    .then(originalQuestion => {
+                                                                        const updatedQuestions = [...questions];
+                                                                        updatedQuestions[index] = originalQuestion;
+                                                                        setQuestions(updatedQuestions);
+                                                                    })
+                                                                    .catch(console.error);
+                                                            } else {
+                                                                // For new questions, revert to the last saved state or remove if never saved
+                                                                const updatedQuestions = [...questions];
+                                                                if (!question._id) {
+                                                                    // Remove unsaved new question
+                                                                    updatedQuestions.splice(index, 1);
+                                                                }
+                                                                setQuestions(updatedQuestions);
+                                                            }
+                                                            setEditingQuestions(prev => {
+                                                                const newSet = new Set(prev);
+                                                                newSet.delete(index);
+                                                                return newSet;
+                                                            });
+                                                        }}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-primary"
+                                                    onClick={() => toggleQuestionEdit(index)}
+                                                >
+                                                    Edit
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                     {editingQuestions.has(index) ? (
                                         <div className="card-body">
