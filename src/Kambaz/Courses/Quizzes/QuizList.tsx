@@ -172,17 +172,16 @@ function QuizList({ quizzes }: QuizListProps) {
                     {displayedQuizzes.map((quiz) => (
                         <div key={quiz._id} className="list-group-item rounded-3 border-dark-subtle mt-2">
                             <div className="d-flex justify-content-between align-items-start">
-                                <div className="flex-grow-1">
+                                <div className="flex-grow-1" onClick={() => setSelectedQuiz(quiz)} style={{ cursor: 'pointer' }}>
                                     <div className="d-flex align-items-center gap-2">
                                         <h5 className="mb-1">{quiz.title}</h5>
                                         {isFaculty && (
-                                            <button
-                                                className="btn btn-link p-0 text-decoration-none"
-                                                onClick={() => handlePublishToggle(quiz)}
-                                                title={quiz.published ? "Unpublish Quiz" : "Publish Quiz"}
+                                            <span 
+                                                className="text-muted" 
+                                                title={quiz.published ? "Published" : "Not Published"}
                                             >
                                                 {quiz.published ? "✅" : "🚫"}
-                                            </button>
+                                            </span>
                                         )}
                                     </div>
                                     {quiz.description && <p className="mb-1 fst-italic">{quiz.description}</p>}
@@ -203,43 +202,74 @@ function QuizList({ quizzes }: QuizListProps) {
                                     </div>
                                 </div>
                                 <div className="btn-group mt-3">
-                                    <button
-                                        className="btn btn-outline-info"
-                                        onClick={() => setSelectedQuiz(quiz)}
-                                    >
-                                        Details
-                                    </button>
-                                    {isFaculty ? (
-                                        <>
-                                            <button
-                                                className="btn btn-outline-primary"
-                                                onClick={() => handleEdit(quiz)}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="btn btn-outline-secondary"
-                                                onClick={() => handlePreview(quiz)}
-                                            >
-                                                Preview
-                                            </button>
-                                            <button
-                                                className="btn btn-outline-danger"
-                                                onClick={() => handleDelete(quiz._id)}
-                                            >
-                                                Delete
-                                            </button>
-                                        </>
-                                    ) : (
-                                        canTakeQuiz(quiz) && (
-                                            <button
-                                                className="btn btn-primary"
-                                                onClick={() => handleTakeQuiz(quiz)}
-                                            >
-                                                Take Quiz
-                                            </button>
-                                        )
-                                    )}
+                                    <div className="dropdown">
+                                        <button 
+                                            className="btn btn-outline-secondary dropdown-toggle"
+                                            type="button"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false"
+                                        >
+                                            Actions
+                                        </button>
+                                        <ul className="dropdown-menu">
+                                            <li>
+                                                <button
+                                                    className="dropdown-item"
+                                                    onClick={() => setSelectedQuiz(quiz)}
+                                                >
+                                                    Details
+                                                </button>
+                                            </li>
+                                            {isFaculty ? (
+                                                <>
+                                                    <li>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => handleEdit(quiz)}
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => handlePreview(quiz)}
+                                                        >
+                                                            Preview
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => handlePublishToggle(quiz)}
+                                                        >
+                                                            {quiz.published ? "Unpublish" : "Publish"}
+                                                        </button>
+                                                    </li>
+                                                    <li><hr className="dropdown-divider"/></li>
+                                                    <li>
+                                                        <button
+                                                            className="dropdown-item text-danger"
+                                                            onClick={() => handleDelete(quiz._id)}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </li>
+                                                </>
+                                            ) : (
+                                                canTakeQuiz(quiz) && (
+                                                    <li>
+                                                        <button
+                                                            className="dropdown-item"
+                                                            onClick={() => handleTakeQuiz(quiz)}
+                                                        >
+                                                            Take Quiz
+                                                        </button>
+                                                    </li>
+                                                )
+                                            )}
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>

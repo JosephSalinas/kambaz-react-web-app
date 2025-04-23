@@ -81,13 +81,14 @@ function QuizEditor() {
 
     const [quiz, setQuiz] = useState<Quiz>(defaultQuiz);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('details');
+    const [editingQuestions, setEditingQuestions] = useState<Set<number>>(new Set());
 
     useEffect(() => {
         const loadQuiz = async () => {
             try {
                 if (quizId && quizId !== 'new') {
                     const quizData = await client.findQuizById(quizId);
-                    // format dates correctly
                     setQuiz({
                         ...quizData,
                         dueDate: formatDateForInput(quizData.dueDate),
@@ -101,7 +102,6 @@ function QuizEditor() {
                     setQuestions([]);
                 }
             } catch (error) {
-                // NOTE: fix weird double-load error later
                 console.error("Failed to load quiz:", error);
                 setQuiz(defaultQuiz);
                 setQuestions([]);
@@ -242,236 +242,321 @@ function QuizEditor() {
         }
     };
 
-    if (loading) return <div>loading...</div>;
+    const toggleQuestionEdit = (index: number) => {
+        const newEditing = new Set(editingQuestions);
+        if (newEditing.has(index)) {
+            newEditing.delete(index);
+        } else {
+            newEditing.add(index);
+        }
+        setEditingQuestions(newEditing);
+    };
+
+    if (loading) return <div>Loading...</div>;
 
     return (
         <div className="card">
             <div className="card-body">
                 <h3 className="card-title">{quizId !== 'new' ? "Edit Quiz" : "Create Quiz"}</h3>
+                
+                <ul className="nav nav-tabs mb-4">
+                    <li className="nav-item">
+                        <button 
+                            className={`nav-link ${activeTab === 'details' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('details')}
+                        >
+                            Details
+                        </button>
+                    </li>
+                    <li className="nav-item">
+                        <button 
+                            className={`nav-link ${activeTab === 'questions' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('questions')}
+                        >
+                            Questions
+                        </button>
+                    </li>
+                </ul>
+
                 <form onSubmit={(e) => handleSubmit(e, false)}>
-                    <div className="mb-3">
-                        <label className="form-label">Title</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={quiz.title}
-                            onChange={(e) => setQuiz({ ...quiz, title: e.target.value })}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="form-label">Description</label>
-                        <textarea
-                            className="form-control"
-                            value={quiz.description}
-                            onChange={(e) => setQuiz({ ...quiz, description: e.target.value })}
-                        />
-                    </div>
-
-                    <div className="row mb-3">
-                        <div className="col-md-6">
-                            <label className="form-label">Due Date</label>
-                            <div className="date-input-wrapper">
+                    {activeTab === 'details' && (
+                        <>
+                            <div className="mb-3">
+                                <label className="form-label">Title</label>
                                 <input
-                                    type="datetime-local"
+                                    type="text"
                                     className="form-control"
-                                    value={quiz.dueDate || ''}
-                                    onChange={(e) => setQuiz({ ...quiz, dueDate: e.target.value })}
+                                    value={quiz.title}
+                                    onChange={(e) => setQuiz({ ...quiz, title: e.target.value })}
+                                    required
                                 />
                             </div>
-                        </div>
-                        <div className="col-md-3">
-                            <label className="form-label">Available From</label>
-                            <div className="date-input-wrapper">
-                                <input
-                                    type="datetime-local"
+
+                            <div className="mb-3">
+                                <label className="form-label">Description</label>
+                                <textarea
                                     className="form-control"
-                                    value={quiz.availableFrom || ''}
-                                    onChange={(e) => setQuiz({ ...quiz, availableFrom: e.target.value })}
+                                    value={quiz.description}
+                                    onChange={(e) => setQuiz({ ...quiz, description: e.target.value })}
                                 />
                             </div>
-                        </div>
-                        <div className="col-md-3">
-                            <label className="form-label">Available Until</label>
-                            <div className="date-input-wrapper">
-                                <input
-                                    type="datetime-local"
-                                    className="form-control"
-                                    value={quiz.availableUntil || ''}
-                                    onChange={(e) => setQuiz({ ...quiz, availableUntil: e.target.value })}
-                                />
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="row mb-3">
-                        <div className="col-md-6">
-                            <label className="form-label">Quiz Type</label>
-                            <select
-                                className="form-select"
-                                value={quiz.quizType}
-                                onChange={(e) => setQuiz({ ...quiz, quizType: e.target.value })}
-                            >
-                                <option value="Graded Quiz">Graded Quiz</option>
-                                <option value="Practice Quiz">Practice Quiz</option>
-                                <option value="Survey">Survey</option>
-                            </select>
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label">Assignment Group</label>
-                            <select
-                                className="form-select"
-                                value={quiz.assignmentGroup}
-                                onChange={(e) => setQuiz({ ...quiz, assignmentGroup: e.target.value })}
-                            >
-                                <option value="Quizzes">Quizzes</option>
-                                <option value="Assignments">Assignments</option>
-                                <option value="Exams">Exams</option>
-                            </select>
-                        </div>
-                    </div>
+                            <div className="row mb-3">
+                                <div className="col-md-6">
+                                    <label className="form-label">Due Date</label>
+                                    <div className="date-input-wrapper">
+                                        <input
+                                            type="datetime-local"
+                                            className="form-control"
+                                            value={quiz.dueDate || ''}
+                                            onChange={(e) => setQuiz({ ...quiz, dueDate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col-md-3">
+                                    <label className="form-label">Available From</label>
+                                    <div className="date-input-wrapper">
+                                        <input
+                                            type="datetime-local"
+                                            className="form-control"
+                                            value={quiz.availableFrom || ''}
+                                            onChange={(e) => setQuiz({ ...quiz, availableFrom: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col-md-3">
+                                    <label className="form-label">Available Until</label>
+                                    <div className="date-input-wrapper">
+                                        <input
+                                            type="datetime-local"
+                                            className="form-control"
+                                            value={quiz.availableUntil || ''}
+                                            onChange={(e) => setQuiz({ ...quiz, availableUntil: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div className="row mb-3">
-                        <div className="col-md-6">
-                            <label className="form-label">Time Limit (minutes)</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                value={quiz.timeLimit}
-                                onChange={(e) => setQuiz({ ...quiz, timeLimit: parseInt(e.target.value) || 0 })}
-                                min="0"
-                            />
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label">Maximum Attempts</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                value={quiz.maxAttempts}
-                                onChange={(e) => setQuiz({ ...quiz, maxAttempts: parseInt(e.target.value) || 1 })}
-                                min="1"
-                                disabled={!quiz.multipleAttempts}
-                            />
-                        </div>
-                    </div>
+                            <div className="row mb-3">
+                                <div className="col-md-6">
+                                    <label className="form-label">Quiz Type</label>
+                                    <select
+                                        className="form-select"
+                                        value={quiz.quizType}
+                                        onChange={(e) => setQuiz({ ...quiz, quizType: e.target.value })}
+                                    >
+                                        <option value="Graded Quiz">Graded Quiz</option>
+                                        <option value="Practice Quiz">Practice Quiz</option>
+                                        <option value="Survey">Survey</option>
+                                    </select>
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label">Assignment Group</label>
+                                    <select
+                                        className="form-select"
+                                        value={quiz.assignmentGroup}
+                                        onChange={(e) => setQuiz({ ...quiz, assignmentGroup: e.target.value })}
+                                    >
+                                        <option value="Quizzes">Quizzes</option>
+                                        <option value="Assignments">Assignments</option>
+                                        <option value="Exams">Exams</option>
+                                    </select>
+                                </div>
+                            </div>
 
-                    <div className="row mb-3">
-                        <div className="col-md-6">
-                            <label className="form-label">Access Code</label>
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={quiz.accessCode || ''}
-                                onChange={(e) => setQuiz({ ...quiz, accessCode: e.target.value })}
-                                placeholder="Leave blank for no access code"
-                            />
-                            <small className="text-muted">
-                                Students will need to enter this code to access the quiz
-                            </small>
-                        </div>
-                    </div>
+                            <div className="row mb-3">
+                                <div className="col-md-6">
+                                    <label className="form-label">Time Limit (minutes)</label>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        value={quiz.timeLimit}
+                                        onChange={(e) => setQuiz({ ...quiz, timeLimit: parseInt(e.target.value) || 0 })}
+                                        min="0"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label">Maximum Attempts</label>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        value={quiz.maxAttempts}
+                                        onChange={(e) => setQuiz({ ...quiz, maxAttempts: parseInt(e.target.value) || 1 })}
+                                        min="1"
+                                        disabled={!quiz.multipleAttempts}
+                                    />
+                                </div>
+                            </div>
 
-                    <div className="row mb-3">
-                        <div className="col-12">
-                            <div className="form-check">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id="shuffleAnswers"
-                                    checked={quiz.shuffleAnswers}
-                                    onChange={(e) => setQuiz({ ...quiz, shuffleAnswers: e.target.checked })}
-                                />
-                                <label className="form-check-label" htmlFor="shuffleAnswers">
-                                    Shuffle Answers
-                                </label>
+                            <div className="row mb-3">
+                                <div className="col-md-6">
+                                    <label className="form-label">Access Code</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={quiz.accessCode || ''}
+                                        onChange={(e) => setQuiz({ ...quiz, accessCode: e.target.value })}
+                                        placeholder="Leave blank for no access code"
+                                    />
+                                    <small className="text-muted">
+                                        Students will need to enter this code to access the quiz
+                                    </small>
+                                </div>
                             </div>
-                            <div className="form-check">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id="multipleAttempts"
-                                    checked={quiz.multipleAttempts}
-                                    onChange={(e) => setQuiz({ ...quiz, multipleAttempts: e.target.checked })}
-                                />
-                                <label className="form-check-label" htmlFor="multipleAttempts">
-                                    Allow Multiple Attempts
-                                </label>
-                            </div>
-                            <div className="form-check">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id="showCorrectAnswers"
-                                    checked={quiz.showCorrectAnswers}
-                                    onChange={(e) => setQuiz({ ...quiz, showCorrectAnswers: e.target.checked })}
-                                />
-                                <label className="form-check-label" htmlFor="showCorrectAnswers">
-                                    Show Correct Answers After Submission
-                                </label>
-                            </div>
-                            <div className="form-check">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id="oneQuestionAtATime"
-                                    checked={quiz.oneQuestionAtATime}
-                                    onChange={(e) => setQuiz({ ...quiz, oneQuestionAtATime: e.target.checked })}
-                                />
-                                <label className="form-check-label" htmlFor="oneQuestionAtATime">
-                                    Show One Question at a Time
-                                </label>
-                            </div>
-                            <div className="form-check">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id="lockQuestions"
-                                    checked={quiz.lockQuestionsAfterAnswering}
-                                    onChange={(e) => setQuiz({ ...quiz, lockQuestionsAfterAnswering: e.target.checked })}
-                                />
-                                <label className="form-check-label" htmlFor="lockQuestions">
-                                    Lock Questions After Answering
-                                </label>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* questions section, change fill-in-blank in DB later!!! */}
-                    <div className="mb-3">
-                        <h4>Questions</h4>
+                            <div className="row mb-3">
+                                <div className="col-12">
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="shuffleAnswers"
+                                            checked={quiz.shuffleAnswers}
+                                            onChange={(e) => setQuiz({ ...quiz, shuffleAnswers: e.target.checked })}
+                                        />
+                                        <label className="form-check-label" htmlFor="shuffleAnswers">
+                                            Shuffle Answers
+                                        </label>
+                                    </div>
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="multipleAttempts"
+                                            checked={quiz.multipleAttempts}
+                                            onChange={(e) => setQuiz({ ...quiz, multipleAttempts: e.target.checked })}
+                                        />
+                                        <label className="form-check-label" htmlFor="multipleAttempts">
+                                            Allow Multiple Attempts
+                                        </label>
+                                    </div>
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="showCorrectAnswers"
+                                            checked={quiz.showCorrectAnswers}
+                                            onChange={(e) => setQuiz({ ...quiz, showCorrectAnswers: e.target.checked })}
+                                        />
+                                        <label className="form-check-label" htmlFor="showCorrectAnswers">
+                                            Show Correct Answers After Submission
+                                        </label>
+                                    </div>
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="oneQuestionAtATime"
+                                            checked={quiz.oneQuestionAtATime}
+                                            onChange={(e) => setQuiz({ ...quiz, oneQuestionAtATime: e.target.checked })}
+                                        />
+                                        <label className="form-check-label" htmlFor="oneQuestionAtATime">
+                                            Show One Question at a Time
+                                        </label>
+                                    </div>
+                                    <div className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            id="lockQuestions"
+                                            checked={quiz.lockQuestionsAfterAnswering}
+                                            onChange={(e) => setQuiz({ ...quiz, lockQuestionsAfterAnswering: e.target.checked })}
+                                        />
+                                        <label className="form-check-label" htmlFor="lockQuestions">
+                                            Lock Questions After Answering
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {activeTab === 'questions' && (
                         <div className="mb-3">
-                            <select
-                                className="form-select d-inline-block w-auto me-2"
-                                value={newQuestionType}
-                                onChange={(e) => setNewQuestionType(e.target.value as Question['type'])}
-                            >
-                                <option value="multiple-choice">Multiple Choice</option>
-                                <option value="true-false">True/False</option>
-                                <option value="fill-in-blank">Fill in the Blank</option>
-                            </select>
-                            <button
-                                type="button"
-                                className="btn btn-primary"
-                                onClick={addNewQuestion}
-                            >
-                                Add Question
-                            </button>
-                        </div>
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h4>Questions</h4>
+                                <div>
+                                    <select
+                                        className="form-select d-inline-block w-auto me-2"
+                                        value={newQuestionType}
+                                        onChange={(e) => setNewQuestionType(e.target.value as Question['type'])}
+                                    >
+                                        <option value="multiple-choice">Multiple Choice</option>
+                                        <option value="true-false">True/False</option>
+                                        <option value="fill-in-blank">Fill in the Blank</option>
+                                    </select>
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={addNewQuestion}
+                                    >
+                                        Add Question
+                                    </button>
+                                </div>
+                            </div>
 
-                        {questions.map((question, index) => (
-                            <QuizQuestionEditor
-                                key={question._id || index}
-                                question={question}
-                                onChange={(updatedQuestion) => handleQuestionChange(index, updatedQuestion)}
-                                onDelete={() => handleQuestionDelete(index)}
-                                index={index}
-                            />
-                        ))}
-                    </div>
+                            {questions.map((question, index) => (
+                                <div key={question._id || index} className="card mb-3">
+                                    <div className="card-header d-flex justify-content-between align-items-center">
+                                        <h5 className="mb-0">Question {index + 1}</h5>
+                                        <button
+                                            type="button"
+                                            className={`btn ${editingQuestions.has(index) ? 'btn-success' : 'btn-primary'}`}
+                                            onClick={() => toggleQuestionEdit(index)}
+                                        >
+                                            {editingQuestions.has(index) ? 'Save' : 'Edit'}
+                                        </button>
+                                    </div>
+                                    {editingQuestions.has(index) ? (
+                                        <div className="card-body">
+                                            <QuizQuestionEditor
+                                                key={question._id || index}
+                                                question={question}
+                                                onChange={(updatedQuestion) => handleQuestionChange(index, updatedQuestion)}
+                                                onDelete={() => handleQuestionDelete(index)}
+                                                index={index}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="card-body">
+                                            <p><strong>Type:</strong> {question.type}</p>
+                                            <p><strong>Question:</strong> {question.text}</p>
+                                            <p><strong>Points:</strong> {question.points}</p>
+                                            {question.type === 'multiple-choice' && (
+                                                <div>
+                                                    <strong>Options:</strong>
+                                                    <ul>
+                                                        {question.options?.map((opt: any, i: number) => (
+                                                            <li key={i} className={opt.isCorrect ? 'text-success' : ''}>
+                                                                {opt.text} {opt.isCorrect && '✓'}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                            {question.type === 'true-false' && (
+                                                <p><strong>Correct Answer:</strong> {question.correctAnswer ? 'True' : 'False'}</p>
+                                            )}
+                                            {question.type === 'fill-in-blank' && (
+                                                <div>
+                                                    <p><strong>Correct Answers:</strong></p>
+                                                    <ul>
+                                                        {question.correctAnswers?.map((ans: string, i: number) => (
+                                                            <li key={i}>{ans}</li>
+                                                        ))}
+                                                    </ul>
+                                                    <p><strong>Case Sensitive:</strong> {question.caseSensitive ? 'Yes' : 'No'}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="d-flex gap-2">
-                        <button type="submit" className="btn btn-primary" onClick={(e) => handleSubmit(e, false)}>
+                        <button type="submit" className="btn btn-primary">
                             {quiz._id ? "Save Changes" : "Create Quiz"}
                         </button>
                         <button type="button" className="btn btn-success" onClick={(e) => handleSubmit(e, true)}>

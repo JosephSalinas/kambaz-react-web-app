@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { useEffect } from "react";
 
 export default function Dashboard({
   courses,
@@ -8,6 +9,7 @@ export default function Dashboard({
   addNewCourse,
   deleteCourse,
   updateCourse,
+  fetchCourses,
   enrolling,
   setEnrolling,
   updateEnrollment
@@ -26,12 +28,18 @@ export default function Dashboard({
   const { currentUser } = useSelector((state: any) => state.accountReducer);
   const isFaculty = currentUser?.role === "FACULTY";
 
-  // filter courses based on role/enrolling state
   const displayedCourses = isFaculty 
     ? courses 
     : enrolling 
-      ? courses
-      : courses.filter(course => course.enrolled === true);
+      ? courses  // show all courses in view
+      : courses.filter(course => course.enrolled); // show only enrolled courses
+
+  // Refresh courses after enrollment changes
+  useEffect(() => {
+    if (!isFaculty) {
+      fetchCourses();
+    }
+  }, [enrolling]);
 
   return (
     <div id="wd-dashboard">

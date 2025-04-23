@@ -247,7 +247,7 @@ const QuizAttempt: React.FC<QuizAttemptProps> = ({ isPreview = false }) => {
                                                 answer={answers[question._id]}
                                                 onChange={(answer) => handleAnswerChange(question._id, answer)}
                                                 showCorrect={false}
-                                                isDisabled={false}
+                                                isDisabled={isPreview || true}
                                             />
                                         </div>
                                     ))}
